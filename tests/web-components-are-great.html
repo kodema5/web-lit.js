@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../web-lit.css">
+    <!-- <script src="https://unpkg.com/@webcomponents/webcomponentsjs@latest/webcomponents-loader.js"></script> -->
+</head>
+<body>
+    <div id="root">
+    </div>
+
+    <script type="module">
+    import * as web from '../web-lit.js';
+    let { WebElement, css, html, render} = web
+
+
+    class MyElement extends WebElement {
+
+        static get properties() {
+            return {
+                mood: {type: String},
+                status: {type: String},
+            }
+        }
+
+        constructor () {
+            super()
+            this.status = 'start'
+        }
+
+        static get styles() {
+            return WebElement.styles.concat([
+                css`.mood { color: green; }`
+            ])
+        }
+
+        render() {
+            var me = this
+            return html`
+            <div class="container">
+            <div class="row">
+            <h1>
+                Web Components are <span class="mood">
+                    ${me.mood}
+                </span>!
+            </h1>
+            </div>
+            <div class="row">
+            <div class="col-2">
+                <!-- event is chained by @ -->
+                <button type="button"
+                    class="btn btn-primary"
+                    @click=${me.toggleTimes}
+                >${me.status}</button>
+            </div>
+            </div>
+            </div>
+            `;
+        }
+
+        toggleTimes() {
+            let me = this
+            me.dispatchEvent(new CustomEvent('my-element:status', {
+                bubbles: true,  // for all ancestors
+                cancellable: true, // stopped by e.preventDefault()
+                detail: { status: me.status }
+            }))
+
+
+            if (me.status==='start') {
+                me.status = 'stop'
+                me.intId = setInterval(() =>{ me.refreshTime() }, 1000)
+                me.refreshTime()
+            } else {
+                me.status = 'start'
+                clearInterval(me.intId)
+            }
+        }
+
+        refreshTime() {
+            let me = this
+            let now = (new Date()).toLocaleTimeString()
+            me.mood = `awesome @ ${now}`
+            me.dispatchEvent(new CustomEvent('my-element:refresh', {
+                bubbles: true,  // for all ancestors
+                cancellable: true, // stopped by e.preventDefault()
+                detail: {now}
+            }))
+        }
+
+    }
+
+    customElements.define('my-element', MyElement);
+
+    let root = document.getElementById('root')
+
+    // rendering directly using lit-html
+    // @ captures events
+    //
+    let onStatusChanged = (e) => console.log('status-changed', e.detail?.status)
+    render(html`
+        <div @my-element:status=${onStatusChanged}>
+        <my-element mood="great" data-hello="world" ></my-element>
+        </div>
+    `, root)
+
+
+    {
+        var n = 0
+        // listen to bubbled event
+        //
+        root.addEventListener('my-element:refresh', (e) => {
+            n++
+            console.log('now', e.detail?.now)
+        })
+
+        // access public method
+        //
+        let me = root.querySelector('my-element')
+        setTimeout(() => {
+            if (n>0) return
+            me.toggleTimes()
+        }, 3000)
+    }
+    </script>
+
+</body>
+</html>
