@@ -95,6 +95,10 @@ const ajaxFn = (cfg)=>async (data)=>{
         }
         return a;
     };
+const mod = {
+    ajax,
+    ajaxFn
+};
 class PubSub {
     constructor({ broadcastChannelId  }){
         var me = this;
@@ -257,10 +261,10 @@ let proxy = (arg, scope = null)=>{
         }
     };
 };
-const mod = {
+const mod1 = {
     wrap,
     proxy
 };
-export { ajax as ajax, ajaxFn as ajaxFn };
 export { pubsub as pubsub, PubSub as PubSub };
-export { mod as worker };
+export { mod as Ajax };
+export { mod1 as worker };
