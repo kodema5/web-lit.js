@@ -12,8 +12,9 @@
     </div>
 
     <script type="module">
-    import * as web from './web-lit.js';
-    let { WebElement, css, html, render} = web
+    import * as Web from './web-lit.js';
+    let { WebElement, css, html, render, store, createRef, ref } = Web
+    globalThis.Web = Web
 
 
     class MyElement extends WebElement {
@@ -62,24 +63,24 @@
 
         toggleTimes() {
             let me = this
+            if (me.status==='start') {
+                me.status = 'stop'
+                me.intId = setInterval(() =>{ me.refreshMood() }, 1000)
+                me.refreshMood()
+            } else {
+                me.status = 'start'
+                me.mood = 'great'
+                clearInterval(me.intId)
+            }
+
             me.dispatchEvent(new CustomEvent('my-element:status', {
                 bubbles: true,  // for all ancestors
                 cancellable: true, // stopped by e.preventDefault()
                 detail: { status: me.status }
             }))
-
-
-            if (me.status==='start') {
-                me.status = 'stop'
-                me.intId = setInterval(() =>{ me.refreshTime() }, 1000)
-                me.refreshTime()
-            } else {
-                me.status = 'start'
-                clearInterval(me.intId)
-            }
         }
 
-        refreshTime() {
+        refreshMood() {
             let me = this
             let now = (new Date()).toLocaleTimeString()
             me.mood = `awesome @ ${now}`
@@ -99,13 +100,32 @@
     // rendering directly using lit-html
     // @ captures events
     //
-    let onStatusChanged = (e) => console.log('status-changed', e.detail?.status)
+    let r = createRef()
+    let onStatusChanged = (e) => {
+        let a = r.value
+        store.set('my-element', {
+            status: a.status,
+            mood: a.mood,
+        })
+        console.log('status-changed', e.detail?.status)
+    }
+
     render(html`
         <div @my-element:status=${onStatusChanged}>
-        <my-element mood="great" data-hello="world" ></my-element>
+        <my-element ${ref(r)} mood="great" data-hello="world" ></my-element>
         </div>
     `, root)
 
+    // try to get from last status/value
+    {
+        let s = store.get('my-element')
+        if (s) {
+            let a = r.value
+            a.mood = s.mood
+            a.status = s.status=='stop' && '(last)'
+                || s.status
+        }
+    }
 
     {
         var n = 0
@@ -116,13 +136,11 @@
             console.log('now', e.detail?.now)
         })
 
-        // access public method
-        //
-        let me = root.querySelector('my-element')
-        setTimeout(() => {
-            if (n>0) return
-            me.toggleTimes()
-        }, 3000)
+        // let me = root.querySelector('my-element')
+        // setTimeout(() => {
+        //     if (n>0) return
+        //     me.toggleTimes() // access to public method
+        // }, 3000)
     }
     </script>
 

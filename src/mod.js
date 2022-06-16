@@ -2,6 +2,96 @@
 // deno-lint-ignore-file
 // This code was bundled using `deno bundle` and it's not recommended to edit it manually
 
+const isEmpty = (a)=>a == null || a === '' || Array.isArray(a) && a.length === 0;
+let clean = (obj)=>{
+    let v = {};
+    for(let k in obj){
+        let a = obj[k];
+        if (isEmpty(a)) continue;
+        v[k] = a;
+    }
+    return v;
+};
+let set = (root, path, value)=>{
+    let keys = path.split('.');
+    let lastKey = keys.pop();
+    var r = root || {};
+    keys.forEach((k)=>{
+        if (!r.hasOwnProperty(k)) r[k] = {};
+        r = r[k];
+    });
+    r[lastKey] = value;
+    return root;
+};
+let get = (root, path, defaultValue)=>{
+    let keys = path.split('.');
+    let r = root || {};
+    for (let k of keys){
+        if (!r.hasOwnProperty(k)) return defaultValue;
+        r = r[k];
+    }
+    return r;
+};
+let trim = (root, path)=>{
+    let keys = path.split('.');
+    let lastKey = keys.pop();
+    var r = root || {};
+    for (let k of keys){
+        if (!r.hasOwnProperty(k)) return false;
+        r = r[k];
+    }
+    return delete r[lastKey];
+};
+let parse = (str, defaultValue)=>{
+    try {
+        return JSON.parse(str);
+    } catch (x) {
+        return defaultValue;
+    }
+};
+const mod = {
+    clean: clean,
+    set: set,
+    get: get,
+    trim: trim,
+    parse: parse
+};
+class Store {
+    constructor(id, initial = {}){
+        if (!id) throw new Error('store id required');
+        this.id = id;
+        this.state = initial;
+    }
+    set(path, value) {
+        mod.set(this.state, path, value);
+        return this;
+    }
+    get(path, defaultValue) {
+        return this.state && path ? mod.get(this.state, path, defaultValue) : this.state;
+    }
+    trim(path) {
+        if (path) {
+            mod.trim(this.state, path);
+        } else {
+            this.state = {};
+        }
+        return this;
+    }
+    save() {
+        globalThis.sessionStorage.setItem(this.id, JSON.stringify(this.state));
+        return this;
+    }
+    load() {
+        let s = window.sessionStorage.getItem(this.id);
+        this.state = mod.parse(s);
+        return this;
+    }
+    reset() {
+        this.state = {};
+        globalThis.sessionStorage.removeItem(this.id);
+        return this;
+    }
+}
 let processBody = (data, type)=>{
     switch(type){
         case "any":
@@ -95,7 +185,7 @@ const ajaxFn = (cfg)=>async (data)=>{
         }
         return a;
     };
-const mod = {
+const mod1 = {
     ajax,
     ajaxFn
 };
@@ -261,10 +351,14 @@ let proxy = (arg, scope = null)=>{
         }
     };
 };
-const mod1 = {
+const mod2 = {
     wrap,
     proxy
 };
 export { pubsub as pubsub, PubSub as PubSub };
-export { mod as Ajax };
-export { mod1 as worker };
+let store = new Store('web-lit');
+store.load();
+globalThis.addEventListener('beforeunload', ()=>store.save());
+export { store as store, Store as Store };
+export { mod1 as Ajax };
+export { mod2 as worker };
