@@ -60,34 +60,34 @@ class Store {
     constructor(id, initial = {}){
         if (!id) throw new Error('store id required');
         this.id = id;
-        this.state = initial;
+        this.value = initial;
     }
-    set(path, value) {
-        mod.set(this.state, path, value);
+    set(path, values) {
+        this.value = mod.set(this.value || {}, path, values);
         return this;
     }
     get(path, defaultValue) {
-        return this.state && path ? mod.get(this.state, path, defaultValue) : this.state;
+        return this.value && path ? mod.get(this.value, path, defaultValue) : this.value;
     }
     trim(path) {
         if (path) {
-            mod.trim(this.state, path);
+            mod.trim(this.value, path);
         } else {
-            this.state = {};
+            this.value = {};
         }
         return this;
     }
     save() {
-        globalThis.sessionStorage.setItem(this.id, JSON.stringify(this.state));
+        globalThis.sessionStorage.setItem(this.id, JSON.stringify(this.value));
         return this;
     }
     load() {
         let s = window.sessionStorage.getItem(this.id);
-        this.state = mod.parse(s);
+        this.value = mod.parse(s) || {};
         return this;
     }
     reset() {
-        this.state = {};
+        this.value = {};
         globalThis.sessionStorage.removeItem(this.id);
         return this;
     }
@@ -328,7 +328,7 @@ let proxy = (arg, scope = null)=>{
     } else if (arg !== null && arg instanceof Object && arg.constructor === Object) {
         Fn = arg;
     } else {
-        throw 'please pass function/object';
+        throw new Error('please pass function/object');
     }
     globalThis.onmessage = function(e1) {
         if (!e1) return;
@@ -339,10 +339,15 @@ let proxy = (arg, scope = null)=>{
                     id
                 };
                 try {
+                    if (!Fn.hasOwnProperty(fn)) {
+                        throw new Error('undefined property');
+                    }
                     let f = Fn[fn];
-                    if (!f) throw 'undefined method';
-                    let y = await f.apply(scope || Fn, args);
-                    p.data = y;
+                    let isFn = typeof f === 'function';
+                    p.data = isFn ? await f.apply(scope || Fn, args) : f;
+                    if (!isFn && args.length > 0) {
+                        Fn[fn] = args[0];
+                    }
                 } catch (e) {
                     p.error = e;
                 }
