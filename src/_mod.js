@@ -10,5 +10,15 @@ import { Store } from 'https://raw.githubusercontent.com/kodema5/store.js/master
 // a local store
 let store = new Store('web-lit')
 store.load()
+
+// init ajax-headers
+{
+    let AJAX_AUTH_ID = 'ajax.headers.Authorization'
+    let a = store.get(AJAX_AUTH_ID, null)
+    if (a) {
+        Ajax.ajax.headers.Authorization = a
+    }
+}
+
 globalThis.addEventListener('beforeunload', () => store.save())
 export { store, Store }

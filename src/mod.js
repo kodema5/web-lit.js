@@ -363,7 +363,13 @@ const mod2 = {
 export { pubsub as pubsub, PubSub as PubSub };
 let store = new Store('web-lit');
 store.load();
-globalThis.addEventListener('beforeunload', ()=>store.save());
+{
+    let AJAX_AUTH_ID = 'ajax.headers.Authorization';
+    let a = store.get(AJAX_AUTH_ID, null);
+    if (a) {
+        Ajax.ajax.headers.Authorization = a;
+    }
+}globalThis.addEventListener('beforeunload', ()=>store.save());
 export { store as store, Store as Store };
 export { mod1 as Ajax };
 export { mod2 as worker };
