@@ -1,6 +1,4 @@
-// npm install
-// deno bundle -r src/_mod.js src/mod.js
-// npx esbuild --bundle src/index.js --sourcemap --outfile=web-lit.js --format=esm --minify --watch
+// npx esbuild --bundle src/index.js --sourcemap --outfile=lit.js --format=esm --minify --watch
 
 
 import * as Ajax from '../ajax.js/mod.js'
