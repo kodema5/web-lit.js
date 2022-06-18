@@ -1,0 +1,12 @@
+[submodule "ajax.js"]
+	path = ajax.js
+	url = https://github.com/kodema5/ajax.js
+[submodule "pubsub.js"]
+	path = pubsub.js
+	url = https://github.com/kodema5/pubsub.js
+[submodule "waaf.js"]
+	path = waaf.js
+	url = https://github.com/kodema5/waaf.js
+[submodule "store.js"]
+	path = store.js
+	url = https://github.com/kodema5/store.js
