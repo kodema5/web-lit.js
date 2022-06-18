@@ -20,4 +20,4 @@ var qt=Object.defineProperty;var pt=(i,t)=>{for(var e in t)qt(i,e,{get:t[e],enum
  * Copyright 2020 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-//# sourceMappingURL=web-lit.js.map
+//# sourceMappingURL=lit.js.map
