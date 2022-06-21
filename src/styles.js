@@ -4,7 +4,7 @@ import {css} from 'lit'
 
 let styles = () => {
     let { cssRules } = Array.from(document.styleSheets)
-        .filter(a => a.href.indexOf('web-lit')>=0 )[0]
+        .filter(a => a.href.indexOf('lit.css')>=0 )[0]
         || {}
 
     if (!cssRules) return []
